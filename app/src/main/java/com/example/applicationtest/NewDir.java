@@ -17,6 +17,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -24,17 +25,21 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import java.util.List;
+
 public class NewDir extends AppCompatActivity implements View.OnClickListener {
 
     private ImageView picture;
     private EditText editText;
     private EditText docname;
+    private ImageView imageView1;
+    Intent intent1 = new Intent();
+
     public static final int CHOOSE_PHOTO = 2;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_dir);
-        //Button takePhoto = (Button) findViewById(R.id.take_photo);
         //设置新建文件名称有关实例
         Button button1 = (Button)findViewById(R.id.sbmitname) ;
         docname = (EditText) findViewById(R.id.docname);
@@ -43,19 +48,12 @@ public class NewDir extends AppCompatActivity implements View.OnClickListener {
         Button button2 = (Button) findViewById(R.id.sbmit) ;
         editText = (EditText) findViewById(R.id.steps) ;//获得输入实例
         button2.setOnClickListener(NewDir.this);
-        /*
-        Button chooseFromAlbum = (Button) findViewById(R.id.choose_from_album);
-        chooseFromAlbum.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v){
-                if (ContextCompat.checkSelfPermission(NewDir.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(NewDir.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
-                } else {
-                    openAlbum();
-                }
-            }
-        });*/
+        //获取照片
+
+        intent1.setAction(Intent.ACTION_GET_CONTENT);
+        intent1.addCategory(Intent.CATEGORY_OPENABLE);
+        intent1.setType("image/*");
+
     }
     @Override
     public void onClick(View v){
@@ -105,11 +103,13 @@ public class NewDir extends AppCompatActivity implements View.OnClickListener {
                         Btn[k].setOnClickListener(new Button.OnClickListener() {  //这里跟你原来写的被我注释了的监听是一个东西，要改的话记得在这里改。
                             @Override
                             public void onClick(View v) {
+                                startActivityForResult(intent1,111);
+                                /*
                                 if (ContextCompat.checkSelfPermission(NewDir.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                                     ActivityCompat.requestPermissions(NewDir.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
                                 } else {
                                     openAlbum();
-                                }
+                                }*/
                             }
                         });
                     }
@@ -148,8 +148,30 @@ public class NewDir extends AppCompatActivity implements View.OnClickListener {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
+        super.onActivityResult(requestCode,resultCode,data);
         switch (requestCode)
         {
+            //复写onActivityResult读取选择图片的uri
+            case 111:
+                if (resultCode == RESULT_CANCELED){
+                    Toast.makeText(getApplication(),"click to cancel choicing",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                try{
+                    Uri uri = data.getData();
+                    Log.e("TAG",uri.toString());
+                    String filePath = getRealPathFromURI(uri);
+                    Bitmap bitmap1 = getresizePhoto(filePath);
+                    imageView1.setImageBitmap(bitmap1);
+                    if (bitmap1 != null){
+                        Log.e("aa","bitmap1 not null");
+                    }else{
+                        Log.e("aa","bitmap1 is null");
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+                break;
             case CHOOSE_PHOTO:
                 if (resultCode ==RESULT_OK)
                 {
@@ -166,6 +188,35 @@ public class NewDir extends AppCompatActivity implements View.OnClickListener {
             default:
                 break;
         }
+    }
+    //从URI获取String类型的文件路径
+    public String getRealPathFromURI (Uri contentUri){
+        Cursor cursor = null;
+        try{
+            String []proj={MediaStore.Images.Media.DATA};
+            //由context.getContentResolver()获取contnetProvider再获取curso(游标)拥有表获取文件路径返回
+            cursor = getContentResolver().query(contentUri,proj,null,null,null);
+            cursor.moveToFirst();
+            int column_indenx = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            return cursor.getString(column_indenx);
+        }finally {
+            if(cursor != null){
+                cursor.close();
+            }
+        }
+    }
+    //根据文件路径调整图片大小防止oom并且返回bitmap
+    private Bitmap getresizePhoto(String ImagePath){
+        if (ImagePath != null){
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true ;
+            BitmapFactory.decodeFile(ImagePath,options);
+            double ratio = Math.max(options.outWidth*1.0d/1024f,options.outHeight*1.0d/1024);
+            options.inSampleSize = (int) Math.ceil(ratio);
+            Bitmap bitmap = BitmapFactory.decodeFile(ImagePath,options);
+            return bitmap;
+        }
+        return null;
     }
 
     @TargetApi(19)
