@@ -16,6 +16,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -24,7 +25,9 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
-
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.LinearLayout;
 import java.util.List;
 
 public class NewDir extends AppCompatActivity implements View.OnClickListener {
@@ -33,7 +36,7 @@ public class NewDir extends AppCompatActivity implements View.OnClickListener {
     private EditText editText;
     private EditText docname;
     private ImageView imageView1;
-    Intent intent1 = new Intent();
+    private String filePath;
 
     public static final int CHOOSE_PHOTO = 2;
     @Override
@@ -48,12 +51,6 @@ public class NewDir extends AppCompatActivity implements View.OnClickListener {
         Button button2 = (Button) findViewById(R.id.sbmit) ;
         editText = (EditText) findViewById(R.id.steps) ;//获得输入实例
         button2.setOnClickListener(NewDir.this);
-        //获取照片
-
-        intent1.setAction(Intent.ACTION_GET_CONTENT);
-        intent1.addCategory(Intent.CATEGORY_OPENABLE);
-        intent1.setType("image/*");
-
     }
     @Override
     public void onClick(View v){
@@ -76,14 +73,20 @@ public class NewDir extends AppCompatActivity implements View.OnClickListener {
                 int height = dm.heightPixels;
                 if (steps > 0) {
                     //自定义layout组件
-                    RelativeLayout layout = new RelativeLayout(this);
+                    RelativeLayout.LayoutParams layoutParamsroot = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT,RelativeLayout.LayoutParams.FILL_PARENT);
+                    RelativeLayout layoutroot = new RelativeLayout(NewDir.this);
+                    layoutroot.setLayoutParams(layoutParamsroot);
                     //这里创建对应文件个数个按钮，每行放置2个按钮
+                    RelativeLayout layoutbutton = new RelativeLayout(NewDir.this);
                     Button Btn[] = new Button[steps];
                     int j = -1;
                     String ButtonName;
                     for (int i = 0; i <= steps - 1; i++) {
-                        Btn[i] = new Button(this);
-                        Btn[i].setId(2000 + i);
+                        //FilePathList[i] = "hhh" ;//初始化文件数目个文件名数组位置
+                        Btn[i] = new Button(this);//按钮
+                        //imageMain[i] = new ImageView(this);//图片
+                        Btn[i].setId(2000 + i);//按钮
+                        //imageMain[i].setId(3000 + i);//图片
                         ButtonName = "click to add";
                         Btn[i].setText(ButtonName);
                         RelativeLayout.LayoutParams btParams = new RelativeLayout.LayoutParams((width - 50) / 2 , 200);  //设置按钮的宽度和高度
@@ -92,9 +95,23 @@ public class NewDir extends AppCompatActivity implements View.OnClickListener {
                         }
                         btParams.leftMargin = 10 + ((width - 50) / 2 + 10) * (i % 2);   //横坐标定位
                         btParams.topMargin = 20 + 205 * j;   //纵坐标定位
-                        layout.addView(Btn[i], btParams);   //将按钮放入layout组件
+                        layoutbutton.addView(Btn[i], btParams);   //将按钮放入layout组件
                     }
-                    this.setContentView(layout);
+                    //设置button布局和image布局再跟布局中的位置
+                    //按钮布局在大布局种得位置
+                    RelativeLayout.LayoutParams layoutParamsButton = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT,RelativeLayout.LayoutParams.FILL_PARENT);
+                    layoutParamsButton.topMargin = 0;
+                    layoutParamsButton.leftMargin = 0;
+                    layoutroot.addView(layoutbutton , layoutParamsButton);
+                    //图片布局
+                    int im_topmargin = 20 + 205 * j;//记录图片布局开始的纵坐标
+                    RelativeLayout.LayoutParams layoutParamsImageMain = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT,RelativeLayout.LayoutParams.FILL_PARENT);
+                    layoutParamsImageMain.topMargin = im_topmargin;
+                    layoutParamsImageMain.leftMargin = 10;
+                    imageView1 = new ImageView(NewDir.this);
+                    layoutroot.addView(imageView1,layoutParamsImageMain);
+
+                    NewDir.this.setContentView(layoutroot);
                     //批量设置监听
                     for (int k = 0; k <= Btn.length - 1; k++) {
                         //这里不需要findId，因为创建的时候已经确定哪个按钮对应哪个Id
@@ -103,13 +120,9 @@ public class NewDir extends AppCompatActivity implements View.OnClickListener {
                         Btn[k].setOnClickListener(new Button.OnClickListener() {  //这里跟你原来写的被我注释了的监听是一个东西，要改的话记得在这里改。
                             @Override
                             public void onClick(View v) {
+                                Intent intent1 = new Intent(Intent.ACTION_PICK , android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                                intent1.setType("image/*");
                                 startActivityForResult(intent1,111);
-                                /*
-                                if (ContextCompat.checkSelfPermission(NewDir.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                                    ActivityCompat.requestPermissions(NewDir.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
-                                } else {
-                                    openAlbum();
-                                }*/
                             }
                         });
                     }
@@ -119,12 +132,17 @@ public class NewDir extends AppCompatActivity implements View.OnClickListener {
                 break;
         }
     }
+/*
+    public final void UI(){
 
-
+    }*/
     private void openAlbum(){
-        Intent intent = new Intent("android.intent.action.GET_CONTENT");
+        /*Intent intent = new Intent("android.intent.action.GET_CONTENT");
         intent.setType("image/*");
-        startActivityForResult(intent, CHOOSE_PHOTO);
+        startActivityForResult(intent, CHOOSE_PHOTO);*/
+        Intent intent1 = new Intent(Intent.ACTION_PICK , android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        intent1.setType("image/*");
+        startActivityForResult(intent1,111);
     }
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions,int[] grantResults)
@@ -158,11 +176,20 @@ public class NewDir extends AppCompatActivity implements View.OnClickListener {
                     return;
                 }
                 try{
-                    Uri uri = data.getData();
+                    Uri uri = data.getData();//获取系统返回照片的Uri
                     Log.e("TAG",uri.toString());
-                    String filePath = getRealPathFromURI(uri);
+                    filePath = getRealPathFromURI(uri);
                     Bitmap bitmap1 = getresizePhoto(filePath);
+                    //Bitmap bmp = ImageTools.decodeSampledBitmapFromResource(filePath, 100, 100);
+                    Toast.makeText(NewDir.this,filePath,Toast.LENGTH_SHORT).show();
                     imageView1.setImageBitmap(bitmap1);
+                    /*LinearLayout showimage = new LinearLayout(NewDir.this) ;
+                    ImageView imageView1 = new ImageView(NewDir.this);
+                    RelativeLayout.LayoutParams layoutParamsImage = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT,RelativeLayout.LayoutParams.FILL_PARENT);
+                    layoutParamsImage.topMargin = 10;
+                    layoutParamsImage.leftMargin = 10;
+                    showimage.addView(imageView1,layoutParamsImage);
+                    NewDir.this.setContentView(showimage);*/
                     if (bitmap1 != null){
                         Log.e("aa","bitmap1 not null");
                     }else{
@@ -195,10 +222,10 @@ public class NewDir extends AppCompatActivity implements View.OnClickListener {
         try{
             String []proj={MediaStore.Images.Media.DATA};
             //由context.getContentResolver()获取contnetProvider再获取curso(游标)拥有表获取文件路径返回
-            cursor = getContentResolver().query(contentUri,proj,null,null,null);
+            cursor = getContentResolver().query(contentUri,proj,null,null,null);//从系统表中查询指定Uri对应的照片
             cursor.moveToFirst();
             int column_indenx = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-            return cursor.getString(column_indenx);
+            return cursor.getString(column_indenx);//返回照片路径
         }finally {
             if(cursor != null){
                 cursor.close();
@@ -213,12 +240,13 @@ public class NewDir extends AppCompatActivity implements View.OnClickListener {
             BitmapFactory.decodeFile(ImagePath,options);
             double ratio = Math.max(options.outWidth*1.0d/1024f,options.outHeight*1.0d/1024);
             options.inSampleSize = (int) Math.ceil(ratio);
+            options.inJustDecodeBounds = false ;
             Bitmap bitmap = BitmapFactory.decodeFile(ImagePath,options);
             return bitmap;
         }
         return null;
     }
-
+    
     @TargetApi(19)
     private void handleImageOnkitKat(Intent data)
     {
