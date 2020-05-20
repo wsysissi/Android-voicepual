@@ -25,10 +25,18 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
-import android.widget.ScrollView;
-import android.widget.TextView;
-import android.widget.LinearLayout;
-import java.util.List;
+
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.OutputStreamWriter;
+import java.io.FileWriter;
+import java.io.RandomAccessFile;
+
 
 public class NewDir extends AppCompatActivity implements View.OnClickListener {
 
@@ -37,6 +45,9 @@ public class NewDir extends AppCompatActivity implements View.OnClickListener {
     private EditText docname;
     private ImageView imageView1;
     private String filePath;
+    private String inputname;
+    //private static final int WRITE_PERMISSION = 0x01;
+    //Intent intent1 = new Intent();
 
     public static final int CHOOSE_PHOTO = 2;
     @Override
@@ -51,19 +62,40 @@ public class NewDir extends AppCompatActivity implements View.OnClickListener {
         Button button2 = (Button) findViewById(R.id.sbmit) ;
         editText = (EditText) findViewById(R.id.steps) ;//获得输入实例
         button2.setOnClickListener(NewDir.this);
+        //获取照片
+        /*intent1.setAction(Intent.ACTION_GET_CONTENT);
+        intent1.addCategory(Intent.CATEGORY_OPENABLE);
+        intent1.setType("image/*");*/
+
     }
     @Override
     public void onClick(View v){
         switch (v.getId()) {
             //获得新建文件名
             case R.id.sbmitname:
-                String inputname = docname.getText().toString();
-                Toast.makeText(NewDir.this,inputname,Toast.LENGTH_SHORT).show();
+                inputname = docname.getText().toString();
+                //建立以文件名命名的txt文件
+                FileOutputStream fileOutputStream;
+                BufferedWriter bufferedWriter;
+                String FilePath = getApplicationContext().getFilesDir().getAbsolutePath() ;
+                String newfilepath = FilePath + "/" + inputname + ".txt";
+                Toast.makeText(NewDir.this,newfilepath,Toast.LENGTH_SHORT).show();
+                File file = new File(newfilepath);
+                try {
+                    file.createNewFile();
+                    fileOutputStream = new FileOutputStream(file);
+                    bufferedWriter = new BufferedWriter(new OutputStreamWriter(fileOutputStream));
+                    bufferedWriter.write("\n");
+                    bufferedWriter.close();
+                    Toast.makeText(NewDir.this,"ok",Toast.LENGTH_SHORT).show();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 break;
             //识别输入内容是否为数字，不是即提示用户重新输入（暂未实现）
             //获取输入内容，并生成用户所需的按钮数目
             case R.id.sbmit:
-                String inputsteps = editText.getText().toString();
+                final String inputsteps = editText.getText().toString();
                 Toast.makeText(NewDir.this , inputsteps,Toast.LENGTH_SHORT).show();
                 int steps = Integer.parseInt(inputsteps);
                 //获取屏幕大小，以合理设定按钮大小及位置
@@ -123,6 +155,8 @@ public class NewDir extends AppCompatActivity implements View.OnClickListener {
                                 Intent intent1 = new Intent(Intent.ACTION_PICK , android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
                                 intent1.setType("image/*");
                                 startActivityForResult(intent1,111);
+                                writeTotxt(inputname,filePath);
+                                //Toast.makeText(NewDir.this,filePath,Toast.LENGTH_SHORT).show();
                             }
                         });
                     }
@@ -180,16 +214,10 @@ public class NewDir extends AppCompatActivity implements View.OnClickListener {
                     Log.e("TAG",uri.toString());
                     filePath = getRealPathFromURI(uri);
                     Bitmap bitmap1 = getresizePhoto(filePath);
-                    //Bitmap bmp = ImageTools.decodeSampledBitmapFromResource(filePath, 100, 100);
                     Toast.makeText(NewDir.this,filePath,Toast.LENGTH_SHORT).show();
+                    //写入本地文件
+
                     imageView1.setImageBitmap(bitmap1);
-                    /*LinearLayout showimage = new LinearLayout(NewDir.this) ;
-                    ImageView imageView1 = new ImageView(NewDir.this);
-                    RelativeLayout.LayoutParams layoutParamsImage = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT,RelativeLayout.LayoutParams.FILL_PARENT);
-                    layoutParamsImage.topMargin = 10;
-                    layoutParamsImage.leftMargin = 10;
-                    showimage.addView(imageView1,layoutParamsImage);
-                    NewDir.this.setContentView(showimage);*/
                     if (bitmap1 != null){
                         Log.e("aa","bitmap1 not null");
                     }else{
@@ -246,7 +274,60 @@ public class NewDir extends AppCompatActivity implements View.OnClickListener {
         }
         return null;
     }
-    
+    //写入本地文件函数
+    public void writeTotxt(String inputname, String filePath) {
+        try {
+            // 打开一个写文件器，构造函数中的第二个参数true表示以追加形式写文件
+            String FilePath = getApplicationContext().getFilesDir().getAbsolutePath() ;
+            String newfilepath = FilePath + "/" + inputname + ".txt";
+            FileWriter writer = new FileWriter(newfilepath, true);
+            writer.write(filePath+"\n");
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    //获取权限
+    /*private void requestWritePermission(){
+        if(checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)!=PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},WRITE_PERMISSION);
+        }
+    }*/
+    //实验用
+    /*public class ImageTools {
+        public static Bitmap decodeSampledBitmapFromResource(String path, int reqWidth, int reqHeight)
+        {
+            // 第一次解析将inJustDecodeBounds设置为true，来获取图片大小
+            final BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(path, options);
+            // 调用上面定义的方法计算inSampleSize值
+            options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+            // 使用获取到的inSampleSize值再次解析图片
+            options.inJustDecodeBounds = false;
+            return BitmapFactory.decodeFile(path, options);
+
+        }
+
+        private static int calculateInSampleSize(Options options, int reqWidth, int reqHeight)
+        {
+            // 源图片的高度和宽度
+            final int height = options.outHeight;
+            final int width = options.outWidth;
+            int inSampleSize = 1;
+            if (height > reqHeight || width > reqWidth) {
+                // 计算出实际宽高和目标宽高的比率
+                final int heightRatio = Math.round((float) height / (float) reqHeight);
+                final int widthRatio = Math.round((float) width / (float) reqWidth);
+                // 选择宽和高中最小的比率作为inSampleSize的值，这样可以保证最终图片的宽和高
+                // 一定都会大于等于目标的宽和高。
+                inSampleSize = heightRatio < widthRatio ? heightRatio : widthRatio;
+            }
+            return inSampleSize;
+        }
+    }*/
     @TargetApi(19)
     private void handleImageOnkitKat(Intent data)
     {
