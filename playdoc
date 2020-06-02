@@ -1,0 +1,49 @@
+package com.example.applicationtest;
+
+import android.content.Intent;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+public class PlayDocument extends AppCompatActivity {
+    private EditText edit ;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_play_document);
+        Intent intent = getIntent();
+        String inputname = intent.getStringExtra("FileNmae");
+        edit = (EditText) findViewById(R.id.edit);
+        String FilePath = getApplicationContext().getFilesDir().getAbsolutePath() ;
+        String filename = FilePath + "/" + inputname + ".txt";
+        String test = load(filename);
+        if (!TextUtils.isEmpty(test)){
+            edit.setText(test);
+            edit.setSelection(test.length());
+            Toast.makeText(this,"succeeded",Toast.LENGTH_SHORT).show();
+        }
+    }
+    public String load(String filename){
+        FileInputStream in = null;
+        BufferedReader reader = null;
+        StringBuilder content = new StringBuilder();
+        try{
+            in = openFileInput(filename);
+            reader = new BufferedReader(new InputStreamReader(in));
+            String line ="";
+            while((line = reader.readLine()) != null){
+                content.append(line);
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        return content.toString();
+    }
+}
