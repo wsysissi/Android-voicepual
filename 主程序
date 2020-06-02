@@ -8,7 +8,6 @@ import android.support.v7.widget.ButtonBarLayout;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.Toast;
 import android.util.DisplayMetrics;
 import android.widget.RelativeLayout;
@@ -21,11 +20,13 @@ public class FirstActivity extends AppCompatActivity {
         File path = new File(filePath);
         File[] files = path.listFiles();
         ArrayList<String> filesName = new ArrayList<>();
-        for (int i=0 ; i<files.length ; i++){
-            String fileName = files[i].getName();
-            String file = null;
+        //for (int i=0 ; i<files.length ; i++)
+        for (File file:files){
+            String fileName = file.getName();
+            String fileN;
             if (fileName.endsWith(".txt")){//波波存的文件是什么类型的文件就把“.txt”改为那个类型
-                file = fileName.substring(0,fileName.lastIndexOf("."));//.toString();
+                fileN = fileName.substring(0,fileName.lastIndexOf("."));//.toString();
+                filesName.add(fileN);
             }
             if (file != null){
 
@@ -39,6 +40,19 @@ public class FirstActivity extends AppCompatActivity {
         /*Log.d("FirstActivity",getClass().getSimpleName());
         ActivityCollector.addActivity(this);*/
         setContentView(R.layout.first_layout);
+
+        Button button2 = (Button) findViewById(R.id.button_2);//新建文件
+        button2.setOnClickListener(new View.OnClickListener( ) {
+            @Override
+            public void onClick(View v)
+            {
+                Intent intent = new Intent();
+                intent.setClass(FirstActivity.this,NewDir.class);//NewDir为波波创建的新建文件活动
+                startActivity(intent);
+            }
+        });
+
+
         //获取当前程序路径
         String FilePath = getApplicationContext().getFilesDir().getAbsolutePath() ;
         //调用函数得到所有所需类型文件名FileNames
@@ -50,17 +64,12 @@ public class FirstActivity extends AppCompatActivity {
         getWindowManager().getDefaultDisplay().getMetrics(dm);
         int width = dm.widthPixels;
         int height = dm.heightPixels;
-        //自定义layout组件
-        RelativeLayout.LayoutParams layoutParamsroot = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT,RelativeLayout.LayoutParams.FILL_PARENT);
-        RelativeLayout layoutroot = new RelativeLayout(this);
-        layoutroot.setLayoutParams(layoutParamsroot);
-        //这里创建对应文件个数个按钮，每行放置2个按钮
-        RelativeLayout layoutbutton = new RelativeLayout(this);
-        int j = -1;
         if (FileNum > 0){ //如果本地文件夹有文件
-            Toast.makeText(this,"in",Toast.LENGTH_SHORT).show();
+            //自定义layout组件
+            RelativeLayout layout = new RelativeLayout(this);
             //这里创建对应文件个数个按钮，每行放置2个按钮
             Button Btn[] = new Button[FileNum];
+            int j = -1;
             String ButtonName ;
             for  (int i=0; i<=FileNum-1; i++) {
                 Btn[i]=new Button(this);
@@ -73,9 +82,9 @@ public class FirstActivity extends AppCompatActivity {
                 }
                 btParams.leftMargin = 10+ ((width-50)/2+10)*(i%2);   //横坐标定位
                 btParams.topMargin = 20 + 205*j;   //纵坐标定位
-                layoutbutton.addView(Btn[i],btParams);   //将按钮放入layout组件
+                layout.addView(Btn[i],btParams);   //将按钮放入layout组件
             }
-            //this.setContentView(layout);
+            this.setContentView(layout);
             //批量设置监听
             for (int k = 0; k <= Btn.length-1; k++) {
                 //这里不需要findId，因为创建的时候已经确定哪个按钮对应哪个Id
@@ -97,29 +106,6 @@ public class FirstActivity extends AppCompatActivity {
             }
         }
 
-        Button button2 = (Button) findViewById(R.id.button_2);//新建文件
-        button2.setOnClickListener(new View.OnClickListener( ) {
-            @Override
-            public void onClick(View v)
-            {
-                Intent intent = new Intent();
-                intent.setClass(FirstActivity.this,NewDir.class);//NewDir为波波创建的新建文件活动
-                startActivity(intent);
-            }
-        });
-        //设置button布局和image布局再跟布局中的位置
-        //按钮布局在大布局种得位置
-        RelativeLayout.LayoutParams layoutParamsButton = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT,RelativeLayout.LayoutParams.FILL_PARENT);
-        layoutParamsButton.topMargin = 0;
-        layoutParamsButton.leftMargin = 0;
-        layoutroot.addView(layoutbutton , layoutParamsButton);
-        //新建文件布局
-        int im_topmargin = 20 + 205 * j;//记录图片布局开始的纵坐标
-        RelativeLayout.LayoutParams bt2Params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT,RelativeLayout.LayoutParams.FILL_PARENT);
-        bt2Params.topMargin = im_topmargin;
-        bt2Params.leftMargin = 10;
-        layoutroot.addView(button2,bt2Params);
-        this.setContentView(layoutroot);
     }
 /*    @Override
     protected void onDestory(){
