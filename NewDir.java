@@ -3,6 +3,7 @@ package com.example.applicationtest;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.ContentUris;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -75,15 +76,16 @@ public class NewDir extends AppCompatActivity implements View.OnClickListener {
             case R.id.sbmitname:
                 inputname = docname.getText().toString();
                 //建立以文件名命名的txt文件
-                FileOutputStream fileOutputStream;
-                BufferedWriter bufferedWriter;
+                FileOutputStream fileOutputStream=null;
+                BufferedWriter bufferedWriter=null;
                 String FilePath = getApplicationContext().getFilesDir().getAbsolutePath() ;
                 String newfilepath = FilePath + "/" + inputname + ".txt";
                 Toast.makeText(NewDir.this,newfilepath,Toast.LENGTH_SHORT).show();
-                File file = new File(newfilepath);
                 try {
-                    file.createNewFile();
-                    fileOutputStream = new FileOutputStream(file);
+                    //File file = new File(newfilepath);
+                    //file.createNewFile();
+                    //fileOutputStream = new FileOutputStream(file);
+                    fileOutputStream =openFileOutput(inputname, Context.MODE_PRIVATE);
                     bufferedWriter = new BufferedWriter(new OutputStreamWriter(fileOutputStream));
                     bufferedWriter.write("\n");
                     bufferedWriter.close();
@@ -153,7 +155,7 @@ public class NewDir extends AppCompatActivity implements View.OnClickListener {
                             @Override
                             public void onClick(View v) {
                                 Intent intent1 = new Intent(Intent.ACTION_PICK , android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
-                                intent1.setType("image/*");
+                                intent1.setType("video/*");
                                 startActivityForResult(intent1,111);
                                 writeTotxt(inputname,filePath);
                                 //Toast.makeText(NewDir.this,filePath,Toast.LENGTH_SHORT).show();
@@ -166,7 +168,10 @@ public class NewDir extends AppCompatActivity implements View.OnClickListener {
                 break;
         }
     }
+/*
+    public final void UI(){
 
+    }*/
     private void openAlbum(){
         /*Intent intent = new Intent("android.intent.action.GET_CONTENT");
         intent.setType("image/*");
